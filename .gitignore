@@ -1,0 +1,5 @@
+__pycache__/
+.vscode/
+pycutest_cache_holder/
+*.json
+*.txt
