@@ -7,6 +7,7 @@ import os
 
 
 MAX_ITERATIONS = 10
+SKIP_NEW_CALCULATION_AFTER_S = 30
 
 def get_test_problems(problem_file):
     problems = []
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     barzilai_borwein_2 = BarzilaiBorwein(2)
     no_particular_step_size = NoStepSize()
 
-    max_steps = 1
+    max_steps = 5000
     tolerance = 1e-3
 
     all_methods = [Lbfgs(step_size_method=no_particular_step_size, tolerance=tolerance, max_steps=max_steps),
@@ -65,56 +66,41 @@ if __name__ == "__main__":
                    GradientMethodGrippo(step_size_method=barzilai_borwein_2, tolerance=tolerance, max_steps=max_steps, M=10),
                    GradientMethodGrippo(step_size_method=barzilai_borwein_2, tolerance=tolerance, max_steps=max_steps, M=5),
                    GradientMethodNLSA(step_size_method=barzilai_borwein_2, tolerance=tolerance, max_steps=max_steps)]
-    
-    
-    results = {}
 
     for problem in selected_problems:
-        if problem not in list(results.keys()):
-            results[problem] = {}
-        pycutest.print_available_sif_params(problem)
-        clean_problem = pycutest.import_problem(problem)
-
-        results[problem]["info"] = {}
-        results[problem]["info"]["x_size"] = clean_problem.x0.shape
-
         moving_problem_result = {}
-        moving_problem_result["size"] = clean_problem.x0.shape
         
         for iterations in range(MAX_ITERATIONS):
             for method in all_methods:
                 method_name = method.get_name()
                 step_size_method_name = method.get_step_method().get_name()
 
-                method.reset()
-                pycutest.clear_cache(problem)
-                clean_problem = pycutest.import_problem(problem)
-                start = time.time()
-                method.optimize(clean_problem)
-                end = time.time()
-                print(f"Execution time for problem {clean_problem.name} with {method.get_name()} and {method.get_step_method().get_name()} = {end-start}")
-                print("")
-
-                #if method_name not in list(results[problem].keys()):
-                #    results[problem][method_name] = {}
-                #if step_size_method_name not in list(results[problem][method_name].keys()):
-                #    results[problem][method_name][step_size_method_name] = []
-
                 if method_name not in list(moving_problem_result.keys()):
                     moving_problem_result[method_name] = {}
                 if step_size_method_name not in list(moving_problem_result[method_name].keys()):
                     moving_problem_result[method_name][step_size_method_name] = []
                 
-                single_result = {}
+                if len(moving_problem_result[method_name][step_size_method_name]) == 0 or moving_problem_result[method_name][step_size_method_name][-1]["execution_time"] < SKIP_NEW_CALCULATION_AFTER_S:
+                    method.reset()
+                    pycutest.clear_cache(problem)
+                    clean_problem = pycutest.import_problem(problem)
 
-                single_result["iterations"] = method.get_iterations()
-                single_result["value"] = method.get_final_value()
-                single_result["execution_time"] = end - start
+                    start = time.time()
+                    method.optimize(clean_problem)
+                    end = time.time()
+                    print(f"Execution time for problem {clean_problem.name} with {method_name} and {step_size_method_name} = {end-start}")
+                    print("")
+                    
+                    single_result = {}
 
-                #results[problem][method_name][step_size_method_name].append(single_result)
-                moving_problem_result[method_name][step_size_method_name].append(single_result)
+                    single_result["iterations"] = method.get_iterations()
+                    single_result["value"] = method.get_final_value()
+                    single_result["execution_time"] = end - start
+
+                    moving_problem_result[method_name][step_size_method_name].append(single_result)
+                else:
+                    print(f"SKIP {problem.replace("\n", "")} with {method_name} and {step_size_method_name}")
+                    print("")
             
-            #with open(f"{result_file_name}.json", "w") as jsonfile:
-            #    json.dump(results, jsonfile, indent=2)
         save_results(f"{result_file_name}.json", moving_problem_result, problem)
         
