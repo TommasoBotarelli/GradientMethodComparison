@@ -7,6 +7,7 @@ import os
 
 
 MAX_ITERATIONS = 10
+GUARANTEED_ITERATIONS = 2
 SKIP_NEW_CALCULATION_AFTER_S = 30
 
 def get_test_problems(problem_file):
@@ -80,7 +81,7 @@ if __name__ == "__main__":
                 if step_size_method_name not in list(moving_problem_result[method_name].keys()):
                     moving_problem_result[method_name][step_size_method_name] = []
                 
-                if len(moving_problem_result[method_name][step_size_method_name]) == 0 or moving_problem_result[method_name][step_size_method_name][-1]["execution_time"] < SKIP_NEW_CALCULATION_AFTER_S:
+                if len(moving_problem_result[method_name][step_size_method_name]) < GUARANTEED_ITERATIONS or moving_problem_result[method_name][step_size_method_name][-1]["execution_time"] < SKIP_NEW_CALCULATION_AFTER_S:
                     method.reset()
                     pycutest.clear_cache(problem)
                     clean_problem = pycutest.import_problem(problem)
