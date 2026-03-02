@@ -3,6 +3,8 @@
 ## 🚀 Overview
 This project evaluates the performance of the **Gradient Descent method** by benchmarking various **Line Search** techniques and **Initial Step Size** strategies. The goal was to identify high-efficiency configurations for solving large-scale non-linear optimization problems, focusing on the trade-offs between convergence speed and solution quality.
 
+**Note**: a full report of the experimentation can be seen [here](https://github.com/TommasoBotarelli/GradientMethodComparison/blob/main/report.pdf)
+
 ---
 
 ## 🛠️ Technologies & Methodologies
